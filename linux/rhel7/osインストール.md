@@ -3,7 +3,7 @@
 ### nmtui（GUI）で設定  
 ※GUIベースのため手順省略
 
-### nmcli（CLI）で設定
+### nmcli（CUI）で設定
 
 #### デバイスの確認
 
