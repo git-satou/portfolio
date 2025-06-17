@@ -1,180 +1,198 @@
+# 初期セットアップ手順（CentOS / Rocky Linux）
+
 ## ネットワークの設定
-### nmtuiで設定
-GUIベースなので割愛
 
-### nmcliで設定
-- <b>デバイスの確認</b>
+### nmtui（GUI）で設定  
+※GUIベースのため手順省略
 
-```
+### nmcli（CLI）で設定
+
+#### デバイスの確認
+
+```bash
 nmcli device
 ```
 
-- <b>GIP設定</b>
+#### グローバルIP（GIP）の設定
 
-```
-nmcli connection modify {1で確認したDEVICE名} ipv4.method manual ipv4.addresses {IPアドレス ***.***.***.***./***} ipv4.gateway {ゲートウェイIP ***.***.***.***} ipv4.dns 8.8.8.8 connection.autoconnect yes ipv6.method ignore
+```bash
+nmcli connection modify <DEVICE名> \
+  ipv4.method manual \
+  ipv4.addresses <IPアドレス>/<プレフィックス> \
+  ipv4.gateway <ゲートウェイIP> \
+  ipv4.dns 8.8.8.8 \
+  connection.autoconnect yes \
+  ipv6.method ignore
 ```
 
-- <b>LIP設定</b>
+#### ローカルIP（LIP）の設定
 
-```
-nmcli connection modify  {1で確認したDEVICE名} ipv4.method manual ipv4.addresses {IPアドレス ***.***.***.***./***}  connection.autoconnect yes ipv6.method ignore
+```bash
+nmcli connection modify <DEVICE名> \
+  ipv4.method manual \
+  ipv4.addresses <IPアドレス>/<プレフィックス> \
+  connection.autoconnect yes \
+  ipv6.method ignore
 ```
 
 ## 必要パッケージのインストールとアップデート
 
-```
+```bash
 yum -y update
 yum -y groupinstall "Development Tools"
 yum -y install net-tools bash-completion sysstat bind-utils yum-utils mlocate lsof
 ```
 
-## SELinux 及び firewalld の無効化
+## SELinux と firewalld の無効化
 
-- <b>firewalld</b>
+### firewalld の無効化
 
-```
+```bash
 systemctl disable firewalld
 ```
 
-- <b>SELinux</b>
+### SELinux の無効化
 
-```
+```bash
 sed -i -e 's/SELINUX=enforcing/SELINUX=disabled/g' /etc/selinux/config
 ```
 
-## kernel チューニング
-- <b>設定の確認</b>
+## カーネルパラメータのチューニング
 
-``` 
-sysctl net.ipv4.tcp_tw_reuse net.ipv4.ip_local_port_range net.ipv4.tcp_syncookies net.core.somaxconn
+### 現在の設定確認
+
+```bash
+sysctl net.ipv4.tcp_tw_reuse net.ipv4.ip_local_port_range \
+       net.ipv4.tcp_syncookies net.core.somaxconn
 ```
 
-- <b>設定ファイルの作成～設定反映</b>
+### 設定ファイルの作成と反映
 
-```
+```bash
 vi /etc/sysctl.d/custom.conf
+```
 
-＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝
+```conf
 # TIME_WAITのセッションを使いまわし
 net.ipv4.tcp_tw_reuse = 1
+
 # SYN Flood 攻撃対策
 net.ipv4.tcp_syncookies = 1
-# 待ち(キュー)の許容範囲を増やす
-net.core.somaxconn = 4096
-# keepalivedなどでIP転送させる場合に必要
-net.ipv4.ip_forward = 1
-＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝
 
+# 接続待ちキューを拡張
+net.core.somaxconn = 4096
+
+# IP転送（keepalivedなどで使用）
+net.ipv4.ip_forward = 1
+```
+
+```bash
 sysctl --system
 ```
 
-## 内部時間をJSTへ変更
+## タイムゾーン設定（JST）
 
-```
+```bash
 timedatectl set-timezone Asia/Tokyo
 ```
 
-## rc.localに実行権限を付与
+## rc.local に実行権限を付与
 
-```
+```bash
 chmod 744 /etc/rc.d/rc.local
 ```
 
-## sshd_configの修正
+## SSH 設定の強化
 
-```
-# rootログイン不許可
+```conf
+# /etc/ssh/sshd_config の編集
+
 PermitRootLogin no
-# 名前解決を無効化し接続を早める
 UseDNS no
 ```
 
-## SFTPのログを残す設定とデフォルトでのグループ権限の追加
-- <b>/etc/rsyslog.conf に追記</b>
+## SFTP ログの出力とパーミッション設定
 
-```
-# This rule to save the log output of sftp
-local5.*                                                /var/log/sftp.log
-```
+### rsyslog の設定
 
-- <b>出力先のログファイルの作成</b>
-
-```
+```bash
+echo 'local5.*    /var/log/sftp.log' >> /etc/rsyslog.conf
 touch /var/log/sftp.log
 ```
 
-- <b>/etc/ssh/sshd_config に追記</b>
+### sshd_config の設定
 
-```
+```conf
 Subsystem sftp /usr/libexec/openssh/sftp-server -f LOCAL5 -l VERBOSE -u 002
 ```
 
-- <b>反映</b>
+### 設定の反映
 
-```
+```bash
 systemctl reload sshd.service
 systemctl restart rsyslog.service
 ```
 
-- <b>ログのローテート設定</b>
+### ログローテーションの設定
 
-```
-vi /etc/logrotate.d/syslog
-
-======================
-/var/log/sftp.log
-======================
+```bash
+vi /etc/logrotate.d/sftp
 ```
 
-## journalログのライフタイム設定
-
+```conf
+/var/log/sftp.log {
+    daily
+    rotate 7
+    compress
+    missingok
+    notifempty
+}
 ```
+
+## journal ログの保持期間設定
+
+```bash
 vi /etc/systemd/journald.conf
+```
 
-=================
+```conf
 MaxRetentionSec=30d
-=================
+```
 
+```bash
 systemctl restart systemd-journald
 ```
 
-## VM環境の場合
-- <b>VMツールのインストール</b>
+## VM 環境向けツールのインストール
 
-```
+```bash
 yum -y install open-vm-tools
 ```
 
-## cloud環境の場合に必要かもしれない cloud-init の設定
-- <b><font color=red>初回</font>起動時にOS設定が自動で変更される
-  Amazon EC2のために作られたものだが、他のcloud環境にも活用されている…らしい</b>
+## cloud-init の設定（cloud 環境向け）
 
-#### 設定ファイル
+### 設定ファイルの場所
 
-```
+```bash
 /etc/cloud/cloud.cfg
 ```
 
-#### 設定を変更しそうな箇所
-- <b>ssh接続のパスワード認証を有効化</b>
+### よく変更する項目
 
-```
-ssh_pwauth:   false
-                  ↓
-ssh_pwauth:   true
-```
+#### パスワード認証の有効化
 
-- <b>セキュリティアップデートの無効化</b>
-
-```
-repo_upgrade: security
-                   ↓
-repo_upgrade: none
+```yaml
+ssh_pwauth: true  # false → true に変更
 ```
 
-#### ホストネームの変更
+#### セキュリティアップデートの無効化
 
+```yaml
+repo_upgrade: none  # security → none に変更
 ```
+
+### ホスト名の設定
+
+```bash
 hostnamectl set-hostname example.com
 ```
