@@ -1,7 +1,7 @@
 ## スキルスタック
 
 ### OS・サーバ
-- Linux（ RHEL / CentOS / Rocky Linux / Ubuntu / Amazon Linux ,2,2023）
+- Linux（ RHEL / CentOS / Rocky Linux / Oracle Linux / Amazon Linux ）
 - Windows Server
  
 ### クラウド
@@ -16,15 +16,17 @@
 
 ### ミドルウェア
 - Web (Apache / Nginx )
+- AP ( Tomcat )
 - DB ( MySQL / PostgreSQL )
-- PHP
 - FTP
 - Postfix / qmail
 
 ### 言語・スクリプト
 - Bash / Shellスクリプト
 - PHP
+  - Laravel
 - Python
+  - 監視、自動化
 
 ### その他 (業務では使っていないもの) 
 - AWS
@@ -33,11 +35,7 @@
   - APIgateway
 - Docker
 - Git / GitHub Actions
-  - アプリケーションのデプロイ / Terraform CI/CD
 - Terraform
-- PHP
-  - Laravel
-- Python
  
 ---
 
@@ -45,5 +43,5 @@
 
 | ディレクトリ          | 内容                                       |
 |-----------------------|--------------------------------------------|
-| `terraform/`          |  |
-| `docs/`               | 構築手順書やポートフォリオの解説資料         |
+| `terraform/`          | 個人的に構築した、IaC環境のソースと資料  |
+| `docs/`               | 構築手順書や過去に実施した作業資料       |
