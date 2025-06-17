@@ -1,5 +1,3 @@
-# 初期セットアップ手順（CentOS / Rocky Linux）
-
 ## ネットワークの設定
 
 ### nmtui（GUI）で設定  
@@ -35,6 +33,12 @@ nmcli connection modify <DEVICE名> \
   ipv6.method ignore
 ```
 
+## ホスト名の設定
+
+```bash
+hostnamectl set-hostname example.com
+```
+
 ## 必要パッケージのインストールとアップデート
 
 ```bash
@@ -62,8 +66,7 @@ sed -i -e 's/SELINUX=enforcing/SELINUX=disabled/g' /etc/selinux/config
 ### 現在の設定確認
 
 ```bash
-sysctl net.ipv4.tcp_tw_reuse net.ipv4.ip_local_port_range \
-       net.ipv4.tcp_syncookies net.core.somaxconn
+sysctl -a
 ```
 
 ### 設定ファイルの作成と反映
@@ -189,10 +192,4 @@ ssh_pwauth: true  # false → true に変更
 
 ```yaml
 repo_upgrade: none  # security → none に変更
-```
-
-### ホスト名の設定
-
-```bash
-hostnamectl set-hostname example.com
 ```
