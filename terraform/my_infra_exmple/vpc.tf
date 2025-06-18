@@ -1,10 +1,13 @@
+#################################
+# VPC & インターネットゲートウェイ
+#################################
 resource "aws_vpc" "vpc" {
   cidr_block           = "192.168.0.0/16"
   enable_dns_support   = true
   enable_dns_hostnames = true
 
   tags = {
-    Name = "my_vpc"
+    Name = "vpc"
   }
 }
 
@@ -12,17 +15,20 @@ resource "aws_internet_gateway" "igw" {
   vpc_id = aws_vpc.vpc.id
 
   tags = {
-    Name = "my_igw"
+    Name = "igw"
   }
 }
 
+#################################
+# サブネット
+#################################
 resource "aws_subnet" "subnet_1a" {
   vpc_id                  = aws_vpc.vpc.id
   cidr_block              = "192.168.1.0/24"
   availability_zone       = "ap-northeast-1a"
 
   tags = {
-    Name = "my-subnet-1a"
+    Name = "subnet-1a"
   }
 }
 
@@ -32,7 +38,7 @@ resource "aws_subnet" "subnet_1c" {
   availability_zone       = "ap-northeast-1c"
 
   tags = {
-    Name = "my-subnet-1c"
+    Name = "subnet-1c"
   }
 }
 
@@ -42,10 +48,13 @@ resource "aws_subnet" "subnet_1d" {
   availability_zone       = "ap-northeast-1d"
 
   tags = {
-    Name = "my-subnet-1d"
+    Name = "subnet-1d"
   }
 }
 
+#################################
+# ルートテーブル
+#################################
 resource "aws_route_table" "route_table" {
   vpc_id = aws_vpc.vpc.id
 
@@ -55,10 +64,13 @@ resource "aws_route_table" "route_table" {
   }
 
   tags = {
-    Name = "my-rtb"
+    Name = "rtb"
   }
 }
 
+#################################
+# ルートテーブルの関連付け
+#################################
 resource "aws_route_table_association" "subnet_1a" {
   subnet_id      = aws_subnet.subnet_1a.id
   route_table_id = aws_route_table.route_table.id
@@ -74,6 +86,9 @@ resource "aws_route_table_association" "subnet_1d" {
   route_table_id = aws_route_table.route_table.id
 }
 
+#################################
+# S3エンドポイントの作成
+#################################
 resource "aws_vpc_endpoint" "s3_gateway" {
   vpc_id       = aws_vpc.vpc.id
   service_name = "com.amazonaws.ap-northeast-1.s3"
