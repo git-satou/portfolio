@@ -6,9 +6,7 @@
 ```bash
 [web]
 path = /var/www/example.com/
-comment = web
 max connections = 4
-lock file = /var/lock/subsys/web-rsync.lock
 uid = root
 gid = root
 read only = no
@@ -34,5 +32,5 @@ rsync -avz --delete rsync://192.168.1.100/web/ /var/www/example.com/
 - cron
 
 ```bash
-*/5 * * * * pgrep -fx "/bin/bash /root/sh/rsync.sh" > /dev/null || /root/sh/rsync.sh > /root/sh/rsync.log 2>&1
+*/5 * * * * pgrep -fx "/bin/bash /root/sh/rsync.sh" > /dev/null || bash -c '/root/sh/rsync.sh | ts '[\%Y-\%m-\%d \%H:\%M:\%S]' > /var/log/rsync/rsync.log 2>&1'
 ```
