@@ -1,6 +1,3 @@
-#################################
-# RDS Aurora MySQL serverless v2
-#################################
 resource "aws_db_subnet_group" "db_subnet" {
   name       = "laravel-apprunner-docker-db_subnet_group"
   subnet_ids = [
