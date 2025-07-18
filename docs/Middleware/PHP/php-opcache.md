@@ -1,7 +1,6 @@
 ## 調査
 ### GUIツールの導入
-視覚的にわかりやすいよう、以下のphpプログラムを利用する。
-[外部リンク](https://gist.githubusercontent.com/ck-on/4959032/raw/ad6362bff017f3c59c96ab395e3308ed52650cab/ocp.php)
+視覚的にわかりやすいよう、この[プログラム](https://gist.githubusercontent.com/ck-on/4959032/raw/ad6362bff017f3c59c96ab395e3308ed52650cab/ocp.php)を利用する。
 
 ### 確認
 hitsグラフを確認し、90%以下の場合はチューニングする余地がある。
