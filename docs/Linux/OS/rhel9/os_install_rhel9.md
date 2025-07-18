@@ -1,10 +1,8 @@
 ## ネットワークの設定
-
 ### nmtui (GUI) で設定  
 ※GUIベースのため省略
 
 ### nmcli（CUI）で設定
-
 #### デバイスの確認
 
 ```bash
@@ -53,17 +51,17 @@ hostnamectl set-hostname example.com
 ```bash
 yum -y update
 yum -y groupinstall "Development Tools"
-yum -y install postfix net-tools bash-completion sysstat s-nail bind-utils chrony yum-utils mlocate lsof
+yum -y install net-tools bash-completion sysstat bind-utils chrony yum-utils mlocate lsof
 ```
 
-## postfixを自動起動
+## postfixを使用する場合
 
 ```bash
+yum install -y s-nail postfix
 systemctl enable --now postfix
 ```
 
 ## devel系のパッケージをインストールするために有効化
-
 ### 一般的なサーバ
 
 ```bash
@@ -77,21 +75,19 @@ yum config-manager --enable ol9_codeready_builder
 ```
 
 ## SELinux 及び firewalld の無効化
-
 ### firewalld の無効化
 
 ```bash
 systemctl disable firewalld
 ```
 
-### SELinux の無効化（※反映には再起動が必要）
+### SELinux の無効化（反映に再起動が必要）
 
 ```bash
 grubby --update-kernel ALL --args selinux=0
 ```
 
 ## kernel チューニング
-
 ### 現在の設定を確認
 
 ```bash
@@ -125,7 +121,6 @@ timedatectl set-timezone Asia/Tokyo
 ```
 
 ## SFTPのログを残す設定とデフォルトでのグループ権限の追加
-
 ### /etc/rsyslog.conf に追記
 
 ```conf
@@ -142,6 +137,7 @@ touch /var/log/sftp.log
 ### sshd_config の編集
 
 ```conf
+#Subsystem sftp	/usr/libexec/openssh/sftp-server
 Subsystem sftp /usr/libexec/openssh/sftp-server -f LOCAL5 -l VERBOSE -u 002
 ```
 
@@ -160,11 +156,8 @@ vi /etc/logrotate.d/rsyslog
 
 ```conf
 /var/log/sftp.log {
-    daily
-    rotate 7
     compress
     missingok
-    notifempty
 }
 ```
 
@@ -182,34 +175,48 @@ MaxRetentionSec=30day
 systemctl restart systemd-journald
 ```
 
-## VM環境の場合
-
-### VMツールのインストール
+## VM環境 の場合
+### vmtoolのインストール
 
 ```bash
 yum -y install open-vm-tools
 ```
 
-## cloud環境の場合に必要かもしれない cloud-init の設定
+## cloud-init の設定（cloud 環境向け）
+### 設定対象
 
-> 初回起動時にOS設定が自動で変更される。Amazon EC2のために作られたものだが、他のcloud環境にも活用されている模様。
-
-### 設定ファイル
-
-```bash
+```conf
 /etc/cloud/cloud.cfg
 ```
 
-### 設定を変更しそうな箇所
-
-#### ssh接続のパスワード認証を有効化
+- パスワード認証の有効化
 
 ```yaml
 ssh_pwauth: false  # → true に変更
 ```
 
-#### セキュリティアップデートの無効化
+#### パッケージアップデートの無効化
+
+- /etc/cloud/cloud.cfg.d/cloud_final_modules.yaml
+
+cloud_final_modulesからpackage_update_upgrade_installを抜いたものを列挙する
 
 ```yaml
-repo_upgrade: security  # → none に変更
+cloud_final_modules:
+  - puppet
+  - chef
+  - ansible
+  - mcollective
+  - salt_minion
+  - rightscale_userdata
+  - scripts_vendor
+  - scripts_per_once
+  - scripts_per_boot
+  - scripts_per_instance
+  - scripts_user
+  - ssh_authkey_fingerprints
+  - keys_to_console
+  - phone_home
+  - final_message
+  - power_state_change
 ```

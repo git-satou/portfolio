@@ -1,10 +1,9 @@
 ## ネットワークの設定
 
 ### nmtui（GUI）で設定  
-※GUIベースのため手順省略
+※GUIベースのため手順省略  
 
 ### nmcli（CUI）で設定
-
 #### デバイスの確認
 
 ```bash
@@ -48,7 +47,6 @@ yum -y install net-tools bash-completion sysstat bind-utils yum-utils mlocate ls
 ```
 
 ## SELinux と firewalld の無効化
-
 ### firewalld の無効化
 
 ```bash
@@ -99,40 +97,33 @@ sysctl --system
 timedatectl set-timezone Asia/Tokyo
 ```
 
-## rc.local に実行権限を付与
-
-```bash
-chmod 744 /etc/rc.d/rc.local
-```
-
 ## SSH 設定の強化
+- /etc/ssh/sshd_config
 
 ```conf
-# /etc/ssh/sshd_config の編集
-
 PermitRootLogin no
 UseDNS no
 ```
 
 ## SFTP ログの出力とパーミッション設定
+### /etc/rsyslog.conf に追記
 
-### rsyslog の設定
-
-```bash
-echo 'local5.*    /var/log/sftp.log' >> /etc/rsyslog.conf
-touch /var/log/sftp.log
+```conf
+# This rule to save the log output of sftp
+local5.*                                                /var/log/sftp.log
 ```
 
 ### sshd_config の設定
 
 ```conf
+#Subsystem sftp	/usr/libexec/openssh/sftp-server
 Subsystem sftp /usr/libexec/openssh/sftp-server -f LOCAL5 -l VERBOSE -u 002
 ```
 
 ### 設定の反映
 
 ```bash
-systemctl reload sshd.service
+systemctl restart sshd.service
 systemctl restart rsyslog.service
 ```
 
@@ -144,44 +135,26 @@ vi /etc/logrotate.d/sftp
 
 ```conf
 /var/log/sftp.log {
-    daily
-    rotate 7
     compress
     missingok
-    notifempty
 }
 ```
 
-## journal ログの保持期間設定
-
-```bash
-vi /etc/systemd/journald.conf
-```
-
-```conf
-MaxRetentionSec=30d
-```
-
-```bash
-systemctl restart systemd-journald
-```
-
-## VM 環境向けツールのインストール
+## VM環境 の場合
+### vmtoolのインストール
 
 ```bash
 yum -y install open-vm-tools
 ```
 
 ## cloud-init の設定（cloud 環境向け）
-
 ### 設定ファイルの場所
 
 ```bash
 /etc/cloud/cloud.cfg
 ```
 
-### よく変更する項目
-
+### 特に変更する項目
 #### パスワード認証の有効化
 
 ```yaml
