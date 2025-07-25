@@ -70,25 +70,25 @@ systemctl enable httpd
 ---
 
 ## チューニング
-
-### `/etc/httpd/conf/httpd.conf` 例
+### 必須
 
 ```conf
-keepAlive off
 ServerTokens Prod
 ```
 
----
+### 必要に応じて
 
-### 上位にロードバランサー等がある場合
+```conf
+keepAlive off
+```
 
-#### X-Forwarded-For ヘッダで IP 評価
+### 上位にロードバランサー等があり、X-Forwarded-ForにGIPを入れたい場合
 
 ```conf
 RemoteIPHeader X-Forwarded-For
 ```
 
-#### ログフォーマットの出力形式変更（viエディタ で置換）
+#### ログフォーマットの出力形式変更
 
 ```vim
 :%s/LogFormat "%h/LogFormat "%a/g
@@ -119,8 +119,7 @@ UMask=002
 
 ---
 
-## `.htaccess` による推奨設定
-
+## リダイレクト系
 ### HTTP → HTTPS へリダイレクト
 
 #### 上位に LB が**ない**場合
@@ -129,7 +128,7 @@ UMask=002
 # HTTP to HTTPS
 RewriteEngine On
 RewriteCond %{HTTPS} off
-RewriteRule ^(.*)?$ https://%{HTTP:Host}%{REQUEST_URI} [L,R=302,NE]
+RewriteRule ^ https://example.com%{REQUEST_URI} [L,R=301]
 ```
 
 #### 上位に LB が**ある**場合
@@ -138,27 +137,26 @@ RewriteRule ^(.*)?$ https://%{HTTP:Host}%{REQUEST_URI} [L,R=302,NE]
 # HTTP to HTTPS
 RewriteEngine On
 RewriteCond %{HTTP:X-Forwarded-Proto} !https
-RewriteRule ^(.*)?$ https://%{HTTP_HOST}%{REQUEST_URI} [L,R=302,NE]
+RewriteRule ^(.*)?$ https://example.com%{REQUEST_URI} [L,R=301]
 ```
 
 ---
 
-### www の有無統一
-
-#### `www` **なし**に統一
+### www を含むURLの統一化
+#### www **なし**に統一
 
 ```apacheconf
 # Redirect to not WWW
 RewriteEngine On
-RewriteCond %{HTTP_HOST} ^www\.(.*) [NC]
-RewriteRule ^(.*)$ https://%1%{REQUEST_URI} [L,R=302,NE]
+RewriteCond %{HTTP_HOST} ^www\.example\.com$ [NC]
+RewriteRule ^ https://example.com%{REQUEST_URI} [L,R=301]
 ```
 
-#### `www` **あり**に統一
+#### www **あり**に統一
 
 ```apacheconf
 # Redirect to WWW
 RewriteEngine On
-RewriteCond %{HTTP_HOST} !^www\. [NC]
-RewriteRule ^(.*)$ https://www.%{HTTP_HOST}%{REQUEST_URI} [L,R=302,NE]
+RewriteCond %{HTTP_HOST} ^example\.com$ [NC]
+RewriteRule ^ https://www.example.com%{REQUEST_URI} [L,R=301]
 ```
