@@ -130,14 +130,12 @@ systemctl restart rsyslog.service
 ### ログローテーションの設定
 
 ```bash
-vi /etc/logrotate.d/sftp
+vi /etc/logrotate.d/syslog
 ```
 
 ```conf
-/var/log/sftp.log {
-    compress
-    missingok
-}
+# 追記
+/var/log/sftp.log 
 ```
 
 ## VM環境 の場合

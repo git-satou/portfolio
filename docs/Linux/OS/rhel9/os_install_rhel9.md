@@ -155,10 +155,8 @@ vi /etc/logrotate.d/rsyslog
 ```
 
 ```conf
-/var/log/sftp.log {
-    compress
-    missingok
-}
+# 追記
+/var/log/sftp.log 
 ```
 
 ## journalログのライフタイム設定
