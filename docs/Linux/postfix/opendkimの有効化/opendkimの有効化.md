@@ -1,102 +1,126 @@
 ## 必要パッケージのインストール
 
-```
+```bash
 yum install epel-release
 yum install opendkim opendkim-tools
 yum install libmemcached-awesome sendmail-milter
 ```
 
-## opendkimの設定
+## opendkim
 ### /etc/opendkim.conf
-- 変更箇所のみ記載
 
-```
+```conf
+#Mode  v
 Mode  sv
+```
+
+```conf
+#SoftwareHeader        yes
 SoftwareHeader        no
+```
+
+```conf
+Selector      default
 # Selector    default
+```
+
+```conf
+KeyFile       /etc/opendkim/keys/default.private
 # KeyFile     /etc/opendkim/keys/default.private
+```
+
+```conf
+# KeyTable    /etc/opendkim/KeyTable
 KeyTable      /etc/opendkim/KeyTable
+```
+
+```conf
+# SigningTable        refile:/etc/opendkim/SigningTable
 SigningTable  refile:/etc/opendkim/SigningTable
+```
+
+```conf
+# ExternalIgnoreList  refile:/etc/opendkim/TrustedHosts
 ExternalIgnoreList    refile:/etc/opendkim/TrustedHosts
+```
+
+```conf
+# InternalHosts       refile:/etc/opendkim/TrustedHosts
 InternalHosts refile:/etc/opendkim/TrustedHosts
 ```
 
 - ソケット通信からポート通信へ変更
 
-```
-Socket  inet:8891@localhost
+```conf
 #Socket local:/run/opendkim/opendkim.sock
+Socket  inet:8891@localhost
 ```
 
-### DKIMさせるドメインの設定
+### ドメインの設定
+#### ディレクトリの作成
 
-- ドメイン単位でのDKIM用ディレクトリの作成
-
-```
+```bash
 mkdir /etc/opendkim/keys/example.com
 ```
 
-- DKIM発行
+#### 鍵の発行
 
-```
+```bash
 opendkim-genkey -D /etc/opendkim/keys/example.com/ -d example.com -s default
 ```
 
-- 発行されたディレクトリにTXTレコードが記載されているので登録する
+#### default.txtよりDNSにてTXTレコードを設定
 
-```
+```bash
 cat /etc/opendkim/keys/example.com/default.txt 
 ```
 
-- 権限変更
+#### 権限変更
 
-```
+```bash
 chown -R opendkim. /etc/opendkim/keys/example.com
 ```
 
-### /etc/opendkim/KeyTable
-- 読み込みさせる
+#### 鍵の読み込み
+- /etc/opendkim/KeyTable
 
-```
+```conf
 default._domainkey.example.com example.com:default:/etc/opendkim/keys/example.com/default.private
 ```
 
-### /etc/opendkim/SigningTable
-- example.comをFromドメインとする全てのメールにDKIMを付与する
+#### example.comをFromドメインとする全てのメールにDKIMを付与する
+- /etc/opendkim/SigningTable
 
-```
+```conf
 *@example.com default._domainkey.example.com
 ```
 
-- リレー元サーバからのメールに対して署名を許可(リレーサーバとして使用しないのであれば設定不要)
-### /etc/opendkim/TrustedHosts
+#### リレー元サーバからのメールに対して署名を許可(リレーサーバとして使用しないのであれば設定不要)
+- /etc/opendkim/TrustedHosts
 
-```
-{許可したいIP}
+```conf
+<許可IP>
 ```
 
-### opendkimを自動起動設定し起動
+### 起動
 
-```
+```bash
 systemctl enable --now opendkim
 ```
 
 ## Postfix
-### opendkimと連携
+### opendkimとの連携
 
 - /etc/postfix/main.cf
 
-```
+```conf
 smtpd_milters = inet:127.0.0.1:8891
 non_smtpd_milters = inet:127.0.0.1:8891
 milter_default_action = accept
 ```
 
-- Postfix再起動
+### Postfix再起動
 
-```
+```bash
 systemctl restart postfix
 ```
-
-### テストメール送信
-Gmailなどに送信してソースヘッダを開き、DKIMが付与されているか確認する
