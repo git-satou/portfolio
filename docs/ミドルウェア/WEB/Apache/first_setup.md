@@ -10,19 +10,11 @@ yum -y install httpd httpd-devel
 yum -y install mod_ssl
 ```
 
-### 自動起動の有効化
-
-```bash
-systemctl enable httpd
-```
-
----
-
 ## VirtualHost の設定例
 
-### HTTP 用
+### HTTP
 
-```apacheconf
+```conf
 <VirtualHost *:80>
     ServerName example.com
     ServerAlias www.example.com
@@ -39,11 +31,9 @@ systemctl enable httpd
 </VirtualHost>
 ```
 
----
+### HTTPS
 
-### HTTPS 用
-
-```apacheconf
+```conf
 <VirtualHost *:443>
     ServerName example.com
     ServerAlias www.example.com
@@ -53,8 +43,9 @@ systemctl enable httpd
     ErrorLog /var/log/httpd/example.com_ssl_error.log
 
     SSLEngine on
-    SSLProtocol all -SSLv2 -SSLv3
-    SSLCipherSuite HIGH:3DES:!aNULL:!MD5:!SEED:!IDEA
+    SSLProtocol -all +TLSv1.2 +TLSv1.3
+    SSLCipherSuite HIGH:!aNULL:!MD5:!3DES:!RC4:!DSS:!EXP:!NULL
+
     SSLCertificateFile /etc/httpd/ssl/example.com.crt
     SSLCertificateKeyFile /etc/httpd/ssl/example.com.key
     SSLCertificateChainFile /etc/httpd/ssl/example.com.ca
@@ -67,19 +58,20 @@ systemctl enable httpd
 </VirtualHost>
 ```
 
----
-
 ## チューニング
-### 必須
+### バージョンを表示しない
 
 ```conf
 ServerTokens Prod
 ```
 
-### 必要に応じて
+### 不要なconfの無効化
 
-```conf
-keepAlive off
+```bash
+mkdir /etc/httpd/conf.d/disabled
+mv /etc/httpd/conf.d/autoindex.conf /etc/httpd/conf.d/disabled/
+mv /etc/httpd/conf.d/userdir.conf /etc/httpd/conf.d/disabled/
+mv /etc/httpd/conf.d/welcome.conf /etc/httpd/conf.d/disabled/
 ```
 
 ### 上位にロードバランサー等があり、X-Forwarded-ForにGIPを入れたい場合
@@ -88,13 +80,13 @@ keepAlive off
 RemoteIPHeader X-Forwarded-For
 ```
 
-#### ログフォーマットの出力形式変更
+### ログフォーマットの出力形式変更
 
 ```vim
 :%s/LogFormat "%h/LogFormat "%a/g
 ```
 
-#### HTTP/2 を無効化する（Safari + ALB の HTTPS 問題回避）
+### HTTP/2 を無効化する（Safari + ALB の HTTPS 問題回避）
 
 参考：https://dev.classmethod.jp/articles/resolve-safari-and-alb-https-connection-errors/
 
@@ -102,9 +94,7 @@ RemoteIPHeader X-Forwarded-For
 mv /etc/httpd/conf.modules.d/10-h2.conf{,.org}
 ```
 
----
-
-#### Apache の書き込みにグループ権限を付与する場合
+### Apache の書き込みにグループ権限を付与する場合
 
 ```bash
 systemctl edit httpd
@@ -112,49 +102,44 @@ systemctl edit httpd
 
 以下のみを記載（他の記述は削除）：
 
-```ini
+```conf
 [Service]
 UMask=002
 ```
 
----
-
 ## リダイレクト系
-### HTTP → HTTPS へリダイレクト
+### HTTP から HTTPS へリダイレクト
+#### 上位に LB がない場合
 
-#### 上位に LB が**ない**場合
-
-```apacheconf
+```conf
 # HTTP to HTTPS
 RewriteEngine On
 RewriteCond %{HTTPS} off
 RewriteRule ^ https://example.com%{REQUEST_URI} [L,R=301]
 ```
 
-#### 上位に LB が**ある**場合
+#### 上位に LB がある場合
 
-```apacheconf
+```conf
 # HTTP to HTTPS
 RewriteEngine On
 RewriteCond %{HTTP:X-Forwarded-Proto} !https
 RewriteRule ^(.*)?$ https://example.com%{REQUEST_URI} [L,R=301]
 ```
 
----
-
 ### www を含むURLの統一化
-#### www **なし**に統一
+#### www なしに統一
 
-```apacheconf
+```conf
 # Redirect to not WWW
 RewriteEngine On
 RewriteCond %{HTTP_HOST} ^www\.example\.com$ [NC]
 RewriteRule ^ https://example.com%{REQUEST_URI} [L,R=301]
 ```
 
-#### www **あり**に統一
+#### www ありに統一
 
-```apacheconf
+```conf
 # Redirect to WWW
 RewriteEngine On
 RewriteCond %{HTTP_HOST} ^example\.com$ [NC]
