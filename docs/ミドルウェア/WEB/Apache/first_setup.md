@@ -43,9 +43,6 @@ yum -y install mod_ssl
     ErrorLog /var/log/httpd/example.com_ssl_error.log
 
     SSLEngine on
-    SSLProtocol -all +TLSv1.2 +TLSv1.3
-    SSLCipherSuite HIGH:!aNULL:!MD5:!3DES:!RC4:!DSS:!EXP:!NULL
-
     SSLCertificateFile /etc/httpd/ssl/example.com.crt
     SSLCertificateKeyFile /etc/httpd/ssl/example.com.key
     SSLCertificateChainFile /etc/httpd/ssl/example.com.ca
