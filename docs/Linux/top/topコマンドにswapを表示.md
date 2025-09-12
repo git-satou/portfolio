@@ -1,3 +1,6 @@
+## 目的
+topコマンドはデフォルトでswap使用率がないので、手動で表示させる。
+
 ## SWAPの表示
 ### topコマンドから、fを押すと下記画面になる
 
@@ -125,7 +128,7 @@ Fields Management for window 1:Def, whose current sort field is %CPU
 - ESCで戻り、大文字のWで保存される。表示の保存はユーザ依存
 
 
-## おまけ
+## topコマンドについて
 ### SWAPでソートする
 
 ```

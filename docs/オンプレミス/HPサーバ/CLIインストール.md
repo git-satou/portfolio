@@ -1,3 +1,6 @@
+## はじめに
+Raid方式や世代によってインストール方法が変わる
+
 ## hpacucliのインストール
 
 ```bash
@@ -12,8 +15,7 @@ wget https://downloads.linux.hpe.com/SDR/repo/mcp/centos/7/x86_64/current/ssacli
 rpm -ivh ssacli-5.10-44.0.x86_64.rpm
 ```
 
-## RAID監視スクリプト(参考)
-
+## RAID監視スクリプト
 ### hpacucli
 
 ```bash
