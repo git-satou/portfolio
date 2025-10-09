@@ -43,7 +43,7 @@ resource "aws_apprunner_service" "web" {
     auto_deployments_enabled = true
 
     image_repository {
-      image_identifier      = "161848874613.dkr.ecr.ap-northeast-1.amazonaws.com/laravel-apprunner-docker_ecr:latest"
+      image_identifier      = "161848874613.dkr.ecr.ap-northeast-1.amazonaws.com/laravel-apprunner-docker-ecr:latest"
       image_repository_type = "ECR"
 
       image_configuration {
